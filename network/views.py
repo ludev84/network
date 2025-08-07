@@ -145,3 +145,15 @@ def follow_toggle(request, username):
         Follow.objects.create(follower=request.user, following=target_user)
 
     return HttpResponseRedirect(reverse("profile", args=[username]))
+
+
+def following_posts(request):
+    from .models import Post, User
+
+    following = request.user.following.all()
+
+    users = User.objects.filter(followers__in=following)
+
+    posts = Post.objects.filter(user__in=users).order_by("-created_at")
+
+    return render(request, "network/following_posts.html", {"posts": posts})
