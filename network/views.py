@@ -8,7 +8,12 @@ from .models import User
 
 
 def index(request):
-    return render(request, "network/index.html")
+    posts = (
+        User.objects.get(username=request.user.username)
+        .posts.all()
+        .order_by("-created_at")
+    )
+    return render(request, "network/index.html", {"posts": posts})
 
 
 def login_view(request):
@@ -24,9 +29,11 @@ def login_view(request):
             login(request, user)
             return HttpResponseRedirect(reverse("index"))
         else:
-            return render(request, "network/login.html", {
-                "message": "Invalid username and/or password."
-            })
+            return render(
+                request,
+                "network/login.html",
+                {"message": "Invalid username and/or password."},
+            )
     else:
         return render(request, "network/login.html")
 
@@ -45,19 +52,38 @@ def register(request):
         password = request.POST["password"]
         confirmation = request.POST["confirmation"]
         if password != confirmation:
-            return render(request, "network/register.html", {
-                "message": "Passwords must match."
-            })
+            return render(
+                request, "network/register.html", {"message": "Passwords must match."}
+            )
 
         # Attempt to create new user
         try:
             user = User.objects.create_user(username, email, password)
             user.save()
         except IntegrityError:
-            return render(request, "network/register.html", {
-                "message": "Username already taken."
-            })
+            return render(
+                request, "network/register.html", {"message": "Username already taken."}
+            )
         login(request, user)
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+
+
+def new_post(request):
+    if request.method == "POST":
+        content = request.POST.get("content")
+        if content:
+            from .models import Post
+
+            post = Post(user=request.user, content=content)
+            post.save()
+            return HttpResponseRedirect(reverse("index"))
+        else:
+            return render(
+                request,
+                "network/new_post.html",
+                {"message": "Post content cannot be empty."},
+            )
+    else:
+        return render(request, "network/index.html")
