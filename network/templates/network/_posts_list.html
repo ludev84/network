@@ -1,13 +1,36 @@
 {% if posts %}
     <div class="posts-list">
-        {% for post in posts %}
+        {% for post in page_obj %}
             <div class="post">
                 <p><strong>{{ post.user.username }}</strong> <small>{{ post.created_at|date:"Y-m-d H:i" }}</small></p>
                 <p>{{ post.content }}</p>
                 <p>&#x2764; 0</p>
             </div>
         {% endfor %}
+
+        <div class="pagination">
+            <span>
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}">&lt; previous</a>
+                    <br>
+                    <a href="?page=1">&lt;&lt; first</a>
+                {% endif %}
+            </span>
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            <span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next &gt;</a>
+                    <br>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &gt;&gt;</a>
+                {% endif %}
+            </span>
+        </div>
     </div>
+
 {% else %}
     <p>No posts available.</p>
 {% endif %}

@@ -10,3 +10,9 @@
     border: 1px solid #ddd;
     margin-bottom: 10px;
 }
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    justify-items: center;
+}

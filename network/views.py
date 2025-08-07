@@ -3,6 +3,7 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.core.paginator import Paginator
 
 from .models import User
 
@@ -88,7 +89,17 @@ def all_posts(request):
     from .models import Post
 
     posts = Post.objects.all().order_by("-created_at")
-    return render(request, "network/all_posts.html", {"posts": posts})
+
+    # Pagination
+    paginator = Paginator(posts, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request,
+        "network/all_posts.html",
+        {"posts": posts, "page_obj": page_obj},
+    )
 
 
 def profile(request, username):
@@ -100,6 +111,11 @@ def profile(request, username):
         return HttpResponse("User does not exist.")
 
     posts = Post.objects.filter(user=profile_user).order_by("-created_at")
+
+    # Pagigantion
+    paginator = Paginator(posts, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
 
     is_following = False
     if request.user.is_authenticated:
@@ -116,6 +132,7 @@ def profile(request, username):
         "is_following": is_following,
         "followers_count": followers_count,
         "following_count": following_count,
+        "page_obj": page_obj,
     }
 
     return render(request, "network/profile.html", context)
@@ -151,9 +168,14 @@ def following_posts(request):
     from .models import Post, User
 
     following = request.user.following.all()
-
     users = User.objects.filter(followers__in=following)
-
     posts = Post.objects.filter(user__in=users).order_by("-created_at")
 
-    return render(request, "network/following_posts.html", {"posts": posts})
+    # Pagigantion
+    paginator = Paginator(posts, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request, "network/following_posts.html", {"posts": posts, "page_obj": page_obj}
+    )
