@@ -89,3 +89,59 @@ def all_posts(request):
 
     posts = Post.objects.all().order_by("-created_at")
     return render(request, "network/all_posts.html", {"posts": posts})
+
+
+def profile(request, username):
+    from .models import Post, User, Follow
+
+    try:
+        profile_user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return HttpResponse("User does not exist.")
+
+    posts = Post.objects.filter(user=profile_user).order_by("-created_at")
+
+    is_following = False
+    if request.user.is_authenticated:
+        is_following = Follow.objects.filter(
+            follower=request.user, following=profile_user
+        ).exists()
+
+    followers_count = Follow.objects.filter(following=profile_user).count()
+    following_count = Follow.objects.filter(follower=profile_user).count()
+
+    context = {
+        "profile_user": profile_user,
+        "posts": posts,
+        "is_following": is_following,
+        "followers_count": followers_count,
+        "following_count": following_count,
+    }
+
+    return render(request, "network/profile.html", context)
+
+
+def follow_toggle(request, username):
+    from .models import User, Follow
+
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect(reverse("login"))
+
+    try:
+        target_user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return HttpResponse("User does not exist.")
+
+    if request.user == target_user:
+        return HttpResponse("You cannot follow yourself.")
+
+    follow_relation = Follow.objects.filter(
+        follower=request.user, following=target_user
+    ).first()
+
+    if follow_relation:
+        follow_relation.delete()
+    else:
+        Follow.objects.create(follower=request.user, following=target_user)
+
+    return HttpResponseRedirect(reverse("profile", args=[username]))
