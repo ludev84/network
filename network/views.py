@@ -8,12 +8,7 @@ from .models import User
 
 
 def index(request):
-    posts = (
-        User.objects.get(username=request.user.username)
-        .posts.all()
-        .order_by("-created_at")
-    )
-    return render(request, "network/index.html", {"posts": posts})
+    return render(request, "network/index.html")
 
 
 def login_view(request):
@@ -87,3 +82,10 @@ def new_post(request):
             )
     else:
         return render(request, "network/index.html")
+
+
+def all_posts(request):
+    from .models import Post
+
+    posts = Post.objects.all().order_by("-created_at")
+    return render(request, "network/all_posts.html", {"posts": posts})
