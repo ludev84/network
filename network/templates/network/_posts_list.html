@@ -2,9 +2,14 @@
     <div class="posts-list">
         {% for post in page_obj %}
             <div class="post">
-                <p><strong>{{ post.user.username }}</strong> <small>{{ post.created_at|date:"Y-m-d H:i" }}</small></p>
-                <p>{{ post.content }}</p>
+                <p><strong><a href="{% url 'profile' post.user.username %}">{{ post.user.username }}</a></strong> <small>{{ post.created_at|date:"Y-m-d H:i" }}</small></p>
+                <div id="post-{{ post.id }}-content">
+                    <p>{{ post.content }}</p>
+                </div>
                 <p>&#x2764; 0</p>
+                {% if request.user == post.user %}
+                    <button class="btn btn-primary" id="{{ post.id }}" data-type="edit">Edit</button>
+                {% endif %}
             </div>
         {% endfor %}
 

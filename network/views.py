@@ -3,7 +3,12 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.http import JsonResponse
+import json
+from django.views.decorators.csrf import csrf_exempt
+
 
 from .models import User
 
@@ -179,3 +184,30 @@ def following_posts(request):
     return render(
         request, "network/following_posts.html", {"posts": posts, "page_obj": page_obj}
     )
+
+
+@csrf_exempt
+@login_required
+def post(request, post_id):
+    from .models import Post
+
+    try:
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return JsonResponse({"error": "Post not found."}, status=404)
+
+    if request.method == "GET":
+        return JsonResponse(post.serialize())
+
+    elif request.method == "PUT":
+        if request.user == post.user:
+            data = json.loads(request.body)
+            post.content = data["content"]
+            post.save()
+            return HttpResponse(status=204)
+        else:
+            return JsonResponse({"error": "Permission denied."}, status=404)
+
+    # Post must be via GET or PUT
+    else:
+        return JsonResponse({"error": "GET or PUT request required."}, status=400)
