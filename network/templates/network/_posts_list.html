@@ -6,9 +6,16 @@
                 <div id="post-{{ post.id }}-content">
                     <p>{{ post.content }}</p>
                 </div>
-                <p>&#x2764; 0</p>
+                <button class="btn btn-danger like" id="like-post-{{ post.id }}" data-id="{{ post.id }}" data-likes="{{ post.number_of_likes }}">
+                    {% if request.user in post.likes.all %}
+                        &#x2665;
+                    {% else %}
+                        &#x2661;
+                    {% endif %}
+                    {{ post.number_of_likes }}
+                </button>
                 {% if request.user == post.user %}
-                    <button class="btn btn-primary" id="{{ post.id }}" data-type="edit">Edit</button>
+                    <button class="btn btn-primary edit" id="{{ post.id }}" data-type="edit">Edit</button>
                 {% endif %}
             </div>
         {% endfor %}

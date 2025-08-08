@@ -211,3 +211,33 @@ def post(request, post_id):
     # Post must be via GET or PUT
     else:
         return JsonResponse({"error": "GET or PUT request required."}, status=400)
+
+
+@csrf_exempt
+@login_required
+def like_post(request, post_id):
+    from .models import Post
+
+    try:
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return JsonResponse({"error": "Post not found."}, status=404)
+
+    if request.method == "PUT":
+        # data = json.loads(request.body)
+        user = request.user
+        if user in post.likes.all():
+            post.likes.remove(user)
+            liked = False
+        else:
+            post.likes.add(user)
+            liked = True
+        post.save()
+        return JsonResponse(
+            {
+                "liked": liked,
+                "likes_count": post.likes.count(),
+            }
+        )
+    else:
+        return JsonResponse({"error": "Permission denied."}, status=404)
